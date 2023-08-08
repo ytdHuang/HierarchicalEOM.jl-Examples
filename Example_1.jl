@@ -10,13 +10,13 @@ HierarchicalEOM.versioninfo()
 ##############################################################
 # Parameters                                                 #
 ##############################################################
-ϵ  = -5  # energy of electron
-U  = 10  # repulsion energy
-Γ  = 1   # coupling strength
-Wα = 10  # band-width
-Φ  = 4   # bias voltage
-T  = 0.5 # temperature
-Nα = 7   # number of exponent
+ϵ  = -5   # energy of electron
+U  = 10   # repulsion energy
+Γ  =  1   # coupling strength
+Wα = 10   # band-width
+Φ  =  4   # bias voltage
+T  =  0.5 # temperature
+Nα =  7   # number of exponent
 n_max = 4    # truncation of the fermionic hierarchy
 Ith   = 1e-7 # importance threshold
 
@@ -37,11 +37,9 @@ d_dn = -σz ⊗ σm
 
 Hs = ϵ * (d_up' * d_up + d_dn' * d_dn) + U * d_up' * d_up * d_dn' * d_dn
 
-
 ##############################################################
 # Construct Bath objects                                     #
 ##############################################################
-
 # u and d represents spin-up and spin-down, respectively
 # L and R represents the left- and right-hand side fermionic reservoir, respectively
 fuL = Fermion_Lorentz_Pade(d_up.data, Γ, μL, Wα, T, Nα - 1)
@@ -55,7 +53,6 @@ Fbath = [fuL, fdL, fuR, fdR];
 ##############################################################
 # Construct HEOMLS matrix                                    #
 ##############################################################
-
 # construct the even-parity HEOMLS (for solving stationary states of ADOs)
 L_even = M_Fermion(Hs.data, n_max, Fbath; threshold=Ith)
 
@@ -76,7 +73,6 @@ Aω = spectrum(L_odd, ados, d_up.data, ωlist)
 ##############################################################
 # Calculate electronic current with 1st-level-fermionic ADOs #
 ##############################################################
-
 # a function to calculate electronic current for a given ADOs
 function Current(ados, M::M_Fermion)
     
