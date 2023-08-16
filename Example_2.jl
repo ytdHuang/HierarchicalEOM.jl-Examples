@@ -76,16 +76,15 @@ L_odd  = M_Boson_Fermion(Hs.data, m_max, n_max, Bbath, Fbath, :odd; threshold=It
 # Construct HEOMLS matrix (with Master Equation approach)    #
 ##############################################################
 # Drude-Lorentz spectral density
-Jβ(ω) = (2 * Δ * Wβ * ω) / (ω ^ 2 + Wβ ^ 2)
+Jβ(ω) = (4 * Δ * Wβ * ω) / (ω ^ 2 + Wβ ^ 2)
 
 # Bose-Einstein distribution
 nβ(ω) = (exp(ω / T) - 1) ^ (-1)
 
-
 # the list of jump operators
 Jop = [
-    √(2 * π * Jβ(ωc) * (nβ(ωc) + 1)) * (a).data,
-    √(2 * π * Jβ(ωc) *  nβ(ωc)     ) * (a').data
+    √(Jβ(ωc) * (nβ(ωc) + 1)) * (a).data,
+    √(Jβ(ωc) *  nβ(ωc)     ) * (a').data
 ]
 
 # remove the bosonic hierarchy and add Lindbladian to the HEOMLS
@@ -95,24 +94,28 @@ L_ME = addBosonDissipator(L_ME, Jop)
 ##############################################################
 # Solving stationary states for all ADOs                     #
 ##############################################################
-ados = SteadyState(L_even)
+# with HEOM approach (bosonic env.)
+ados_HEOM = SteadyState(L_even) 
+
+# with Lindblad Master equation approach (bosonic env.)
+ados_ME   = SteadyState(L_ME)  
 
 ##############################################################
 # Calculate density of states under stationary states        #
 ##############################################################
 ωlist = -6:0.06:0
-Aω = spectrum(L_odd, ados, d.data, ωlist)
+Aω = spectrum(L_odd, ados_HEOM, d.data, ωlist)
 
 ##############################################################
 # Calculate power spectral density under stationary states   #
 ##############################################################
 ωlist = 0:0.2:6
 
-# with HEOM approach
-Sω_HEOM = spectrum(L_even, ados, a.data, ωlist[2:end])
+# with HEOM approach (bosonic env.)
+Sω_HEOM = spectrum(L_even, ados_HEOM, a.data, ωlist[2:end])
 
 # with Lindblad Master equation approach (bosonic env.)
-Sω_ME   = spectrum(L_ME, ados, a.data, ωlist[2:end])
+Sω_ME   = spectrum(L_ME,   ados_ME,   a.data, ωlist[2:end])
 
 ##############################################################
 # Calculate electronic current with 1st-level-fermionic ADOs #
