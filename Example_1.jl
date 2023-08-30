@@ -14,14 +14,14 @@ HierarchicalEOM.versioninfo()
 U  = 10   # repulsion energy
 Γ  =  1   # coupling strength
 Wα = 10   # band-width
-Φ  =  4   # bias voltage
-T  =  0.5 # temperature
+eΦ =  4   # bias voltage (in terms of the elementary charge e)
+kT =  0.5 # the product of the Boltzmann constant k and the absolute temperature T
 Nα =  7   # number of exponent
 n_max = 4    # truncation of the fermionic hierarchy
 Ith   = 1e-7 # importance threshold
 
-μL =   Φ / 2 # chemical potential of  left-hand side fermionic reservoir
-μR = - Φ / 2 # chemical potential of right-hand side fermionic reservoir
+μL =   eΦ / 2 # chemical potential of  left-hand side fermionic reservoir
+μR = - eΦ / 2 # chemical potential of right-hand side fermionic reservoir
 
 ##############################################################
 # Hamiltonian and Coupling operators                         #
