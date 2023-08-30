@@ -17,8 +17,8 @@ g  =  0.5  # electron-cavity coupling strength
 Δ  =  0.01 #   cavity-bosonic   reservoir coupling strength 
 Wβ =  0.2  # band-width of bosonic reservoir
 Wα = 10    # band-width of fermionic reservoir
-Φ  =  6    # bias voltage
-T  =  0.5  # temperature
+eΦ =  6    # bias voltage (in terms of the elementary charge e)
+kT =  0.5  # the product of the Boltzmann constant k and the absolute temperature T
 Np =  6    # truncation of the cavity photon number
 Nβ =  5    # number of exponent for bosonic   reservoir
 Nα =  7    # number of exponent for fermionic reservoir
@@ -26,8 +26,8 @@ m_max = 4    # truncation of the bosonic   hierarchy
 n_max = 3    # truncation of the fermionic hierarchy
 Ith   = 1e-6 # importance threshold
 
-μL =   Φ / 2 # chemical potential of  left-hand side fermionic reservoir
-μR = - Φ / 2 # chemical potential of right-hand side fermionic reservoir
+μL =   eΦ / 2 # chemical potential of  left-hand side fermionic reservoir
+μR = - eΦ / 2 # chemical potential of right-hand side fermionic reservoir
 
 ##############################################################
 # Hamiltonian and Coupling operators                         #
@@ -52,14 +52,14 @@ Hs = Hc + He + g * d' * d * (a + a');
 # Construct Bath objects                                     #
 ##############################################################
 # L and R represents the left- and right-hand side fermionic reservoir, respectively
-fL = Fermion_Lorentz_Pade(d.data, Γ, μL, Wα, T, Nα - 1)
-fR = Fermion_Lorentz_Pade(d.data, Γ, μR, Wα, T, Nα - 1)
+fL = Fermion_Lorentz_Pade(d.data, Γ, μL, Wα, kT, Nα - 1)
+fR = Fermion_Lorentz_Pade(d.data, Γ, μR, Wα, kT, Nα - 1)
 
 # collect all the fermionic bath objects into a list
 Fbath = [fL, fR];
 
 # boson baths
-Bbath = Boson_DrudeLorentz_Pade((a + a').data, Δ, Wβ, T, Nβ - 1);
+Bbath = Boson_DrudeLorentz_Pade((a + a').data, Δ, Wβ, kT, Nβ - 1);
 
 ##############################################################
 # Construct HEOMLS matrix                                    #
@@ -79,7 +79,7 @@ L_odd  = M_Boson_Fermion(Hs.data, m_max, n_max, Bbath, Fbath, :odd; threshold=It
 Jβ(ω) = (4 * Δ * Wβ * ω) / (ω ^ 2 + Wβ ^ 2)
 
 # Bose-Einstein distribution
-nβ(ω) = (exp(ω / T) - 1) ^ (-1)
+nβ(ω) = (exp(ω / kT) - 1) ^ (-1)
 
 # the list of jump operators
 Jop = [

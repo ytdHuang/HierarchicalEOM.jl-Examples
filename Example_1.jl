@@ -42,10 +42,10 @@ Hs = ϵ * (d_up' * d_up + d_dn' * d_dn) + U * d_up' * d_up * d_dn' * d_dn
 ##############################################################
 # u and d represents spin-up and spin-down, respectively
 # L and R represents the left- and right-hand side fermionic reservoir, respectively
-fuL = Fermion_Lorentz_Pade(d_up.data, Γ, μL, Wα, T, Nα - 1)
-fdL = Fermion_Lorentz_Pade(d_dn.data, Γ, μL, Wα, T, Nα - 1)
-fuR = Fermion_Lorentz_Pade(d_up.data, Γ, μR, Wα, T, Nα - 1)
-fdR = Fermion_Lorentz_Pade(d_dn.data, Γ, μR, Wα, T, Nα - 1)
+fuL = Fermion_Lorentz_Pade(d_up.data, Γ, μL, Wα, kT, Nα - 1)
+fdL = Fermion_Lorentz_Pade(d_dn.data, Γ, μL, Wα, kT, Nα - 1)
+fuR = Fermion_Lorentz_Pade(d_up.data, Γ, μR, Wα, kT, Nα - 1)
+fdR = Fermion_Lorentz_Pade(d_dn.data, Γ, μR, Wα, kT, Nα - 1)
 
 # collect all the fermionic bath objects into a list
 Fbath = [fuL, fdL, fuR, fdR];
