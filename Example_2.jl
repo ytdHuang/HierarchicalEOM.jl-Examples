@@ -1,14 +1,12 @@
 ##############################################################
 # Import Packages                                            #
 ##############################################################
-using HierarchicalEOM
-using LinearAlgebra
-using QuantumOptics # optional (can also construct the operators with standard matrix)
+using HierarchicalEOM  # automatically using QuantumToolbox.jl
 
 HierarchicalEOM.versioninfo()
 
 ##############################################################
-# Parameters                                                 #
+# Parameters (unit: meV)                                     #
 ##############################################################
 ϵ  = -3    # energy of electron
 ωc =  1    # frequency of single-mode cavity
@@ -32,15 +30,12 @@ Ith   = 1e-6 # importance threshold
 ##############################################################
 # Hamiltonian and Coupling operators                         #
 ##############################################################
-b_spin = SpinBasis(1//2)
-b_phot = FockBasis(Np)
-
-σm = sigmap(b_spin)
-Is = identityoperator(b_spin)
-Ip = identityoperator(b_phot)
+σm = sigmam()
+Is = qeye(2)
+Ip = qeye(Np + 1)
 
 # photon / electron annihilation operators
-a = destroy(b_phot) ⊗ Is
+a = destroy(Np + 1) ⊗ Is
 d = Ip              ⊗ σm
 
 He = ϵ  * d' * d
@@ -52,14 +47,14 @@ Hs = Hc + He + g * d' * d * (a + a');
 # Construct Bath objects                                     #
 ##############################################################
 # L and R represents the left- and right-hand side fermionic reservoir, respectively
-fL = Fermion_Lorentz_Pade(d.data, Γ, μL, Wα, kT, Nα - 1)
-fR = Fermion_Lorentz_Pade(d.data, Γ, μR, Wα, kT, Nα - 1)
+fL = Fermion_Lorentz_Pade(d, Γ, μL, Wα, kT, Nα - 1)
+fR = Fermion_Lorentz_Pade(d, Γ, μR, Wα, kT, Nα - 1)
 
 # collect all the fermionic bath objects into a list
 Fbath = [fL, fR];
 
 # boson baths
-Bbath = Boson_DrudeLorentz_Pade((a + a').data, Δ, Wβ, kT, Nβ - 1);
+Bbath = Boson_DrudeLorentz_Pade(a + a', Δ, Wβ, kT, Nβ - 1);
 
 ##############################################################
 # Construct HEOMLS matrix                                    #
@@ -67,10 +62,10 @@ Bbath = Boson_DrudeLorentz_Pade((a + a').data, Δ, Wβ, kT, Nβ - 1);
 # construct the even-parity HEOMLS for 
 ## 1. solving stationary states of ADOs
 ## 2. calculating spectrum (power spectral density) of bosonic system
-L_even = M_Boson_Fermion(Hs.data, m_max, n_max, Bbath, Fbath; threshold=Ith)
+L_even = M_Boson_Fermion(Hs, m_max, n_max, Bbath, Fbath; threshold=Ith)
 
 # construct the odd-parity HEOMLS for calculating spectrum (density of states) of fermionic system
-L_odd  = M_Boson_Fermion(Hs.data, m_max, n_max, Bbath, Fbath, :odd; threshold=Ith)
+L_odd  = M_Boson_Fermion(Hs, m_max, n_max, Bbath, Fbath, ODD; threshold=Ith)
 
 ##############################################################
 # Construct HEOMLS matrix (with Master Equation approach)    #
@@ -83,28 +78,28 @@ nβ(ω) = (exp(ω / kT) - 1) ^ (-1)
 
 # the list of jump operators
 Jop = [
-    √(Jβ(ωc) * (nβ(ωc) + 1)) * (a).data,
-    √(Jβ(ωc) *  nβ(ωc)     ) * (a').data
+    √(Jβ(ωc) * (nβ(ωc) + 1)) * a,
+    √(Jβ(ωc) *  nβ(ωc)     ) * a'
 ]
 
 # remove the bosonic hierarchy and add Lindbladian to the HEOMLS
-L_ME = M_Fermion(Hs.data, n_max, Fbath)
+L_ME = M_Fermion(Hs, n_max, Fbath)
 L_ME = addBosonDissipator(L_ME, Jop)
 
 ##############################################################
 # Solving stationary states for all ADOs                     #
 ##############################################################
 # with HEOM approach (bosonic env.)
-ados_HEOM = SteadyState(L_even) 
+ados_HEOM = steadystate(L_even) 
 
 # with Lindblad Master equation approach (bosonic env.)
-ados_ME   = SteadyState(L_ME)  
+ados_ME   = steadystate(L_ME)  
 
 ##############################################################
 # Calculate density of states under stationary states        #
 ##############################################################
 ωlist = -6:0.06:0
-Aω = spectrum(L_odd, ados_HEOM, d.data, ωlist)
+Aω = DensityOfStates(L_odd, ados_HEOM, d, ωlist)
 
 ##############################################################
 # Calculate power spectral density under stationary states   #
@@ -112,10 +107,10 @@ Aω = spectrum(L_odd, ados_HEOM, d.data, ωlist)
 ωlist = 0:0.2:6
 
 # with HEOM approach (bosonic env.)
-Sω_HEOM = spectrum(L_even, ados_HEOM, a.data, ωlist[2:end])
+Sω_HEOM = PowerSpectrum(L_even, ados_HEOM, a, ωlist[2:end])
 
 # with Lindblad Master equation approach (bosonic env.)
-Sω_ME   = spectrum(L_ME,   ados_ME,   a.data, ωlist[2:end])
+Sω_ME   = PowerSpectrum(L_ME,   ados_ME,   a, ωlist[2:end])
 
 ##############################################################
 # Calculate electronic current with 1st-level-fermionic ADOs #

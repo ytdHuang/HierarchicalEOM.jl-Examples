@@ -1,14 +1,12 @@
 ##############################################################
 # Import Packages                                            #
 ##############################################################
-using HierarchicalEOM
-using LinearAlgebra
-using QuantumOptics # optional (can also construct the operators with standard matrix)
+using HierarchicalEOM  # automatically using QuantumToolbox.jl
 
 HierarchicalEOM.versioninfo()
 
 ##############################################################
-# Parameters                                                 #
+# Parameters (unit: meV)                                     #
 ##############################################################
 ϵ  = -5   # energy of electron
 U  = 10   # repulsion energy
@@ -26,10 +24,9 @@ Ith   = 1e-7 # importance threshold
 ##############################################################
 # Hamiltonian and Coupling operators                         #
 ##############################################################
-b_spin = SpinBasis(1//2)
-σz = sigmaz(b_spin)
-σm = sigmap(b_spin)
-I2 = identityoperator(b_spin)
+σz = sigmaz()
+σm = sigmam()
+I2 = qeye(2)
 
 # spin-up (-down) annihilation operators
 d_up =  σm ⊗ I2
@@ -42,10 +39,10 @@ Hs = ϵ * (d_up' * d_up + d_dn' * d_dn) + U * d_up' * d_up * d_dn' * d_dn
 ##############################################################
 # u and d represents spin-up and spin-down, respectively
 # L and R represents the left- and right-hand side fermionic reservoir, respectively
-fuL = Fermion_Lorentz_Pade(d_up.data, Γ, μL, Wα, kT, Nα - 1)
-fdL = Fermion_Lorentz_Pade(d_dn.data, Γ, μL, Wα, kT, Nα - 1)
-fuR = Fermion_Lorentz_Pade(d_up.data, Γ, μR, Wα, kT, Nα - 1)
-fdR = Fermion_Lorentz_Pade(d_dn.data, Γ, μR, Wα, kT, Nα - 1)
+fuL = Fermion_Lorentz_Pade(d_up, Γ, μL, Wα, kT, Nα - 1)
+fdL = Fermion_Lorentz_Pade(d_dn, Γ, μL, Wα, kT, Nα - 1)
+fuR = Fermion_Lorentz_Pade(d_up, Γ, μR, Wα, kT, Nα - 1)
+fdR = Fermion_Lorentz_Pade(d_dn, Γ, μR, Wα, kT, Nα - 1)
 
 # collect all the fermionic bath objects into a list
 Fbath = [fuL, fdL, fuR, fdR];
@@ -54,21 +51,21 @@ Fbath = [fuL, fdL, fuR, fdR];
 # Construct HEOMLS matrix                                    #
 ##############################################################
 # construct the even-parity HEOMLS (for solving stationary states of ADOs)
-L_even = M_Fermion(Hs.data, n_max, Fbath; threshold=Ith)
+L_even = M_Fermion(Hs, n_max, Fbath; threshold=Ith)
 
 # construct the odd-parity HEOMLS (for calculating spectrum (density of states) of fermionic system)
-L_odd  = M_Fermion(Hs.data, n_max, Fbath, :odd; threshold=Ith)
+L_odd  = M_Fermion(Hs, n_max, Fbath, ODD; threshold=Ith)
 
 ##############################################################
 # Solving stationary states for all ADOs                     #
 ##############################################################
-ados = SteadyState(L_even)
+ados = steadystate(L_even)
 
 ##############################################################
 # Calculate density of states under stationary states        #
 ##############################################################
 ωlist = -20:0.4:20
-Aω = spectrum(L_odd, ados, d_up.data, ωlist)
+Aω = DensityOfStates(L_odd, ados, d_up, ωlist)
 
 ##############################################################
 # Calculate electronic current with 1st-level-fermionic ADOs #
